@@ -1,20 +1,44 @@
 <script setup>
-import { defineProps, defineEmits, ref, reactive, toRef } from "vue";
+import {
+  defineProps,
+  defineEmits,
+  ref,
+  toRef,
+  computed,
+  watchEffect,
+} from "vue";
 
 const props = defineProps({
+  add: Boolean,
   show: Boolean,
   name: String,
   gender: String,
   cell: String,
 });
 
-const emit = defineEmits(["update:gender"]);
+const emit = defineEmits([
+  "update:name",
+  "update:gender",
+  "update:cell",
+  "close",
+  "finalize",
+]);
 
-const gender = toRef(props, "gender");
+// function for name input
+const n = computed(() => props.name);
+const _name = ref(n.value);
+// function for gender input
+const g = computed(() => props.gender);
+const _gender = ref(g.value);
+// function for cell input
+const c = computed(() => props.cell);
+const _cell = ref(c.value);
 
-function editGender(g) {
-  emit("update:gender", g);
-}
+watchEffect(() => {
+  _name.value = n.value;
+  _gender.value = g.value;
+  _cell.value = c.value;
+});
 </script>
 
 <template>
@@ -22,14 +46,13 @@ function editGender(g) {
     <div v-if="show" class="modal-mask">
       <div class="modal-container">
         <div class="modal-header">
-          <slot name="header">修改信息</slot>
+          <slot v-if="add">新建用户</slot>
+          <slot v-if="!add">编辑用户</slot>
         </div>
 
         <div class="modal-body">
-          <input
-            :value="name"
-            @input="$emit('update:name', $event.target.value)"
-          />
+          <input v-model="_name" />
+          <p class="error" v-if="!_name">姓名不可为空</p>
         </div>
 
         <div class="modal-body">
@@ -38,8 +61,7 @@ function editGender(g) {
               type="radio"
               name="genderoption"
               value="男"
-              v-model="gender"
-              @input="editGender($event.target.value)"
+              v-model="_gender"
             />
             <label>男</label>
 
@@ -47,18 +69,16 @@ function editGender(g) {
               type="radio"
               name="genderoption"
               value="女"
-              v-model="gender"
-              @input="editGender($event.target.value)"
+              v-model="_gender"
             />
             <label>女</label>
           </div>
+          <p class="error" v-if="!_gender">姓别不可为空</p>
+        </div>
 
-          <div class="modal-body">
-            <input
-              :value="cell"
-              @input="$emit('update:cell', $event.target.value)"
-            />
-          </div>
+        <div class="modal-body">
+          <input v-model="_cell" />
+          <p class="error" v-if="!_cell">联系电话不可为空</p>
         </div>
 
         <!--
@@ -68,10 +88,16 @@ function editGender(g) {
         -->
 
         <div class="modal-footer">
-          <button class="modal-default-button" @click="$emit('close')">
+          <button class="modal-default-button reset" @click="$emit('close')">
             取消
           </button>
-          <button class="modal-default-button" @click="$emit('finalize')">
+          <button
+            class="modal-default-button"
+            :disabled="!_name || !_gender || !_cell"
+            @click="
+              $emit('finalize', { name: _name, gender: _gender, cell: _cell })
+            "
+          >
             完成
           </button>
         </div>
@@ -98,18 +124,13 @@ function editGender(g) {
   margin: auto;
   padding: 20px 30px;
   background-color: #fff;
-  border-radius: 2px;
+  border-radius: 20px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.33);
   transition: all 0.3s ease;
 }
 
-.modal-header h3 {
-  margin-top: 0;
-  color: #42b983;
-}
-
 .modal-body {
-  margin: 20px 0;
+  margin: 10px 0;
 }
 
 .modal-default-button {
@@ -137,5 +158,21 @@ function editGender(g) {
 .modal-leave-to .modal-container {
   -webkit-transform: scale(1.1);
   transform: scale(1.1);
+}
+
+.modal-header {
+  margin: 0 auto;
+  font-size: larger;
+  font-style: bold;
+  color: #00aaff;
+}
+
+.error {
+  margin-left: 5px;
+  margin-top: -1px;
+  margin-bottom: -1px;
+  font-style: italic;
+  font-size: 12px;
+  color: #ff7878;
 }
 </style>

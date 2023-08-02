@@ -1,8 +1,8 @@
 <script setup>
 import { ref, computed, defineEmits } from "vue";
-import New from "../components/NewModal.vue";
 import Edit from "../components/EditModal.vue";
 import users from "../assets/data.JSON";
+import { selectGroupKey } from "element-plus";
 
 const names = ref(users.users);
 // change selected to users id
@@ -13,19 +13,19 @@ const emit = defineEmits(["show"]);
 // hardcoded
 let hardcoded = 10;
 
+const isAdd = ref(false);
 const showAddModal = ref(false);
 const showEditModal = ref(false);
 
 const search = ref("");
 const searchGender = ref("");
-const temp = ref({
-  name: "",
-  gender: "",
-});
+
 const selected = ref({
   name: "",
   gender: "",
+  cell: "",
 });
+
 const filteredNames = computed(() =>
   names.value.filter(
     (entry) =>
@@ -36,40 +36,11 @@ const filteredNames = computed(() =>
 
 const date = Date();
 
-function create(newUser) {
-  /*
-  if (hasValidInput()) {
-    names.value.push({ id: users.users.length, name: name.value });
-    name.value = "";
-    
-    if (!names.value(name.value)) {
-      names.value.push({id: names.value.length(), name: name.value});
-      name.value = "";
-    }
-    
-  }
-  */
-  const date = new Date();
-  const year = date.getFullYear();
-  const month = date.getMonth();
-  const day = date.getDate();
-
-  names.value.push({
-    id: hardcoded,
-    name: newUser.name,
-    gender: newUser.gender,
-    cell: newUser.cell,
-    date: year + "-" + month + "-" + day,
-  });
-  showAddModal.value = false;
-  hardcoded += 1;
-}
-
 function deleteRow(id) {
   names.value = names.value.filter((entry) => entry.id != id);
 }
 
-function show(id) {
+function select(id) {
   showEditModal.value = true;
   names.value.forEach((e) => {
     if (e.id == id) {
@@ -78,34 +49,38 @@ function show(id) {
   });
 }
 
-const updateName = (value) => {
-  temp.value.name = value;
-};
+const finalizeUpdate = (user) => {
+  if (isAdd.value) {
+    const date = new Date();
+    const year = date.getFullYear();
+    const month = date.getMonth() + 1;
+    const day = date.getDate();
 
-const updateGender = (value) => {
-  temp.value.gender = value;
-};
-
-const updateCell = (value) => {
-  temp.value.cell = value;
-};
-
-const finalizeUpdate = () => {
-  if (temp.value.name) {
-    selected.value.name = temp.value.name;
+    names.value.push({
+      id: hardcoded,
+      name: user.name,
+      gender: user.gender,
+      cell: user.cell,
+      date: year + "-" + month + "-" + day,
+    });
+    hardcoded += 1;
+  } else {
+    if (user.name) {
+      selected.value.name = user.name;
+    }
+    if (user.gender) {
+      selected.value.gender = user.gender;
+    }
+    if (user.cell) {
+      selected.value.cell = user.cell;
+    }
   }
-  if (temp.value.gender) {
-    selected.value.gender = temp.value.gender;
-  }
-  if (temp.value.cell) {
-    selected.value.cell = temp.value.cell;
-  }
-  temp.value = { name: "", gender: "", cell: "" };
-  showEditModal.value = false;
+  close();
 };
 
-const closeEdit = () => {
-  temp.value = { name: "", gender: "" };
+const close = () => {
+  selected.value = { name: "", gender: "", cell: "" };
+  isAdd.value = false;
   showEditModal.value = false;
 };
 
@@ -113,56 +88,44 @@ const resetSearch = () => {
   search.value = "";
   searchGender.value = "";
 };
-
-/*
-function hasValidInput() {
-  return name.value.trim();
-}
-*/
 </script>
 
 <template>
   <div>
-    用户名<input v-model.lazy="search" placeholder="Filter" /> 性别<select
-      v-model.lazy="searchGender"
+    用户名<input v-model="search" placeholder="Filter" /> 性别<select
+      v-model="searchGender"
     >
       <option value="" selected>全部性别</option>
       <option value="男">男</option>
       <option value="女">女</option>
     </select>
-    <button @click="resetSearch">重置</button>
+    <button class="reset" @click="resetSearch">重置</button>
   </div>
 
-  <div class="buttons">
-    <button @click="showAddModal = true">新建</button>
+  <div>
+    <button
+      class="new"
+      @click="
+        showEditModal = true;
+        isAdd = true;
+      "
+    >
+      新建
+    </button>
   </div>
 
   <Teleport to="body">
     <!-- use the modal component, pass in the prop -->
     <edit
+      :add="isAdd"
       :show="showEditModal"
       :name="selected.name"
       :gender="selected.gender"
       :cell="selected.cell"
-      @update:name="updateName"
-      @update:gender="updateGender"
-      @update:cell="updateCell"
       @finalize="finalizeUpdate"
-      @close="closeEdit"
+      @close="close"
     >
-      <template #header>
-        <h3>编辑信息</h3>
-      </template>
     </edit>
-  </Teleport>
-
-  <Teleport to="body">
-    <!-- use the modal component, pass in the prop -->
-    <new :show="showAddModal" @create="create" @close="showAddModal = false">
-      <template #header>
-        <h3>新建用户</h3>
-      </template>
-    </new>
   </Teleport>
 
   <table>
@@ -177,30 +140,33 @@ function hasValidInput() {
         <td v-for="col in users.cols" :key="col">
           {{ n[col.en] }}
         </td>
-        <button @click="show(n.id)">修改</button>
-        <button @click="deleteRow(n.id)">删除</button>
+        <td>
+          <button @click="select(n.id)">修改</button>
+          <button class="del" @click="deleteRow(n.id)">删除</button>
+        </td>
       </tr>
     </tbody>
   </table>
+  <p v-if="filteredNames.length">总计: {{ filteredNames.length }}</p>
   <p v-if="!filteredNames.length">未找到匹配</p>
 </template>
 
 <style>
 table {
-  border: 2px solid #42b983;
+  margin: auto;
+  border-collapse: collapse;
   border-radius: 3px;
   background-color: #fff;
 }
 
 th {
-  background-color: #42b983;
-  color: rgba(255, 255, 255, 0.66);
-  cursor: pointer;
-  user-select: none;
+  background-color: #e4e4e4;
+  color: #464646;
 }
 
 td {
-  background-color: #f9f9f9;
+  border: 1px solid #e4e4e4;
+  background-color: #ffffff;
 }
 
 th,
@@ -215,5 +181,77 @@ th.active {
 
 th.active .arrow {
   opacity: 1;
+}
+
+button:disabled {
+  background-color: #c0c0c0;
+  color: white;
+  cursor: auto;
+  text-decoration: line-through;
+}
+
+button:disabled:hover {
+  background-color: #c0c0c0;
+  color: white;
+}
+
+button {
+  margin-left: 5px;
+  padding: 3px 10px;
+  border: none;
+  border-radius: 5px;
+  background-color: #98ddff;
+  cursor: pointer;
+}
+
+button.new {
+  border-radius: 10px;
+  padding: 5px 10px;
+  margin-top: 5px;
+  margin-bottom: 5px;
+  background-color: #84ffa3;
+}
+
+button.new:hover {
+  background-color: #009b27;
+  color: white;
+}
+
+button.reset {
+  background-color: #7f7f7f;
+  color: white;
+}
+
+button.reset:hover {
+  background-color: #cecece;
+  color: black;
+}
+
+button.del {
+  background-color: #ffa3a3;
+}
+
+button.del:hover {
+  background-color: #ff5353;
+  color: white;
+}
+
+button:hover {
+  background-color: #0093dc; /* Blue background on hover */
+  color: #ffffff;
+}
+
+input {
+  margin-left: 5px;
+  margin-right: 10px;
+  border: 1px solid;
+  border-radius: 5px;
+}
+
+select {
+  margin-left: 5px;
+  margin-right: 10px;
+  border: 1px solid;
+  border-radius: 5px;
 }
 </style>
