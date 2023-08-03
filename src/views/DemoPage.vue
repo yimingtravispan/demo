@@ -14,7 +14,6 @@ const emit = defineEmits(["show"]);
 let hardcoded = 10;
 
 const isAdd = ref(false);
-const showAddModal = ref(false);
 const showEditModal = ref(false);
 
 const search = ref("");
