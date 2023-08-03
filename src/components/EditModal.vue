@@ -1,46 +1,39 @@
 <script setup>
-import {
-  defineProps,
-  defineEmits,
-  ref,
-  toRef,
-  computed,
-  watchEffect,
-} from "vue";
+import { defineProps, defineEmits, ref, watchEffect } from "vue";
 
 const props = defineProps({
   add: Boolean,
-  show: Boolean,
-  name: String,
-  gender: String,
-  cell: String,
+  user: Object,
 });
 
-const emit = defineEmits([
-  "update:name",
-  "update:gender",
-  "update:cell",
-  "close",
-  "finalize",
-]);
+const emit = defineEmits(["finalize"]);
+
+const display = ref(false);
 
 // function for name input
-const _name = ref("");
+const _name = props.add ? ref("") : ref(props.user.name);
 // function for gender input
-const _gender = ref("");
+const _gender = props.add ? ref("") : ref(props.user.gender);
 // function for cell input
-const _cell = ref("");
+const _cell = props.add ? ref("") : ref(props.user.cell);
 
-watchEffect(() => {
-  _name.value = props.name;
-  _gender.value = props.gender;
-  _cell.value = props.cell;
-});
+const close = () => {
+  display.value = false;
+};
+
+const submit = (user) => {
+  display.value = false;
+  emit("finalize", user);
+};
 </script>
 
 <template>
-  <Transition name="modal">
-    <div v-if="show" class="modal-mask">
+  <button :class="{ add: add }" @click="display = true">
+    <p v-if="add">新建</p>
+    <p v-if="!add">编辑</p>
+  </button>
+  <Teleport to="body">
+    <div v-if="display" class="modal-mask">
       <div class="modal-container">
         <div class="modal-header">
           <slot v-if="add">新建用户</slot>
@@ -78,29 +71,21 @@ watchEffect(() => {
           <p class="error" v-if="!_cell">联系电话不可为空</p>
         </div>
 
-        <!--
-        <div class="modal-body">
-          <input v-model="_cell" />
-        </div>
-        -->
-
         <div class="modal-footer">
-          <button class="modal-default-button reset" @click="$emit('close')">
+          <button class="modal-default-button reset" @click="close">
             取消
           </button>
           <button
             class="modal-default-button"
             :disabled="!_name || !_gender || !_cell"
-            @click="
-              $emit('finalize', { name: _name, gender: _gender, cell: _cell })
-            "
+            @click="submit({ name: _name, gender: _gender, cell: _cell })"
           >
             完成
           </button>
         </div>
       </div>
     </div>
-  </Transition>
+  </Teleport>
 </template>
 
 <style>
@@ -113,7 +98,6 @@ watchEffect(() => {
   height: 100%;
   background-color: rgba(0, 0, 0, 0.5);
   display: flex;
-  transition: opacity 0.3s ease;
 }
 
 .modal-container {
@@ -123,7 +107,6 @@ watchEffect(() => {
   background-color: #fff;
   border-radius: 20px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.33);
-  transition: all 0.3s ease;
 }
 
 .modal-body {
@@ -143,20 +126,6 @@ watchEffect(() => {
  * these styles.
  */
 
-.modal-enter-from {
-  opacity: 0;
-}
-
-.modal-leave-to {
-  opacity: 0;
-}
-
-.modal-enter-from .modal-container,
-.modal-leave-to .modal-container {
-  -webkit-transform: scale(1.1);
-  transform: scale(1.1);
-}
-
 .modal-header {
   margin: 0 auto;
   font-size: larger;
@@ -171,5 +140,18 @@ watchEffect(() => {
   font-style: italic;
   font-size: 12px;
   color: #ff7878;
+}
+
+button.add {
+  border-radius: 10px;
+  padding: 5px 10px;
+  margin-top: 5px;
+  margin-bottom: 5px;
+  background-color: #84ffa3;
+}
+
+button.add:hover {
+  background-color: #009b27;
+  color: white;
 }
 </style>

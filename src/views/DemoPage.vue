@@ -1,29 +1,22 @@
 <script setup>
-import { ref, computed, defineEmits } from "vue";
+import { ref, computed } from "vue";
 import Edit from "../components/EditModal.vue";
 import users from "../assets/data.JSON";
 
+// Getting data
 const names = ref(users.users);
-// change selected to users id
-// const selected = ref("");
-
-const emit = defineEmits(["show"]);
-
-// hardcoded
+// vars
 let hardcoded = 10;
 
-const isAdd = ref(false);
-const showEditModal = ref(false);
-
+// For searching
 const search = ref("");
 const searchGender = ref("");
+const resetSearch = () => {
+  search.value = "";
+  searchGender.value = "";
+};
 
-const selected = ref({
-  name: "",
-  gender: "",
-  cell: "",
-});
-
+// Grid Display
 const filteredNames = computed(() =>
   names.value.filter(
     (entry) =>
@@ -32,59 +25,26 @@ const filteredNames = computed(() =>
   )
 );
 
-const date = Date();
-
+// Grid Deletion
 function deleteRow(id) {
   names.value = names.value.filter((entry) => entry.id != id);
 }
 
-function select(id) {
-  showEditModal.value = true;
-  names.value.forEach((e) => {
-    if (e.id == id) {
-      selected.value = e;
-    }
+// Create User
+const createUser = (user) => {
+  const date = new Date();
+  const year = date.getFullYear();
+  const month = date.getMonth() + 1;
+  const day = date.getDate();
+
+  names.value.push({
+    id: hardcoded,
+    name: user.name,
+    gender: user.gender,
+    cell: user.cell,
+    date: year + "-" + month + "-" + day,
   });
-}
-
-const finalizeUpdate = (user) => {
-  if (isAdd.value) {
-    const date = new Date();
-    const year = date.getFullYear();
-    const month = date.getMonth() + 1;
-    const day = date.getDate();
-
-    names.value.push({
-      id: hardcoded,
-      name: user.name,
-      gender: user.gender,
-      cell: user.cell,
-      date: year + "-" + month + "-" + day,
-    });
-    hardcoded += 1;
-  } else {
-    if (user.name) {
-      selected.value.name = user.name;
-    }
-    if (user.gender) {
-      selected.value.gender = user.gender;
-    }
-    if (user.cell) {
-      selected.value.cell = user.cell;
-    }
-  }
-  close();
-};
-
-const close = () => {
-  selected.value = { name: "", gender: "", cell: "" };
-  isAdd.value = false;
-  showEditModal.value = false;
-};
-
-const resetSearch = () => {
-  search.value = "";
-  searchGender.value = "";
+  hardcoded += 1;
 };
 </script>
 
@@ -100,31 +60,7 @@ const resetSearch = () => {
     <button class="reset" @click="resetSearch">重置</button>
   </div>
 
-  <div>
-    <button
-      class="new"
-      @click="
-        showEditModal = true;
-        isAdd = true;
-      "
-    >
-      新建
-    </button>
-  </div>
-
-  <Teleport to="body">
-    <!-- use the modal component, pass in the prop -->
-    <edit
-      :add="isAdd"
-      :show="showEditModal"
-      :name="selected.name"
-      :gender="selected.gender"
-      :cell="selected.cell"
-      @finalize="finalizeUpdate"
-      @close="close"
-    >
-    </edit>
-  </Teleport>
+  <edit :add="true" @finalize="createUser"></edit>
 
   <table>
     <thead>
@@ -134,13 +70,23 @@ const resetSearch = () => {
       </tr>
     </thead>
     <tbody>
-      <tr v-for="n in filteredNames" :key="n.id">
+      <tr v-for="user in filteredNames" :key="user.id">
         <td v-for="col in users.cols" :key="col">
-          {{ n[col.en] }}
+          {{ user[col.en] }}
         </td>
         <td>
-          <button @click="select(n.id)">修改</button>
-          <button class="del" @click="deleteRow(n.id)">删除</button>
+          <edit
+            :add="false"
+            :user="user"
+            @finalize="
+              (updatedUser) => (
+                (user.name = updatedUser.name),
+                (user.gender = updatedUser.gender),
+                (user.cell = updatedUser.cell)
+              )
+            "
+          ></edit>
+          <button class="del" @click="deleteRow(user.id)">删除</button>
         </td>
       </tr>
     </tbody>
@@ -251,5 +197,10 @@ select {
   margin-right: 10px;
   border: 1px solid;
   border-radius: 5px;
+}
+
+p {
+  margin-block-start: 0;
+  margin-block-end: 0;
 }
 </style>
