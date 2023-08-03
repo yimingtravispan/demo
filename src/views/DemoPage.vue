@@ -2,7 +2,6 @@
 import { ref, computed, defineEmits } from "vue";
 import Edit from "../components/EditModal.vue";
 import users from "../assets/data.JSON";
-import { selectGroupKey } from "element-plus";
 
 const names = ref(users.users);
 // change selected to users id
@@ -91,7 +90,7 @@ const resetSearch = () => {
 
 <template>
   <div>
-    用户名<input v-model="search" placeholder="Filter" /> 性别<select
+    用户名<input v-model="search" placeholder="用户名搜索" /> 性别<select
       v-model="searchGender"
     >
       <option value="" selected>全部性别</option>
