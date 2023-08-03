@@ -1,5 +1,12 @@
 <script setup>
-import { defineProps, defineEmits, ref, computed, watchEffect } from "vue";
+import {
+  defineProps,
+  defineEmits,
+  ref,
+  toRef,
+  computed,
+  watchEffect,
+} from "vue";
 
 const props = defineProps({
   add: Boolean,
@@ -18,19 +25,16 @@ const emit = defineEmits([
 ]);
 
 // function for name input
-const n = computed(() => props.name);
-const _name = ref(n.value);
+const _name = ref("");
 // function for gender input
-const g = computed(() => props.gender);
-const _gender = ref(g.value);
+const _gender = ref("");
 // function for cell input
-const c = computed(() => props.cell);
-const _cell = ref(c.value);
+const _cell = ref("");
 
 watchEffect(() => {
-  _name.value = n.value;
-  _gender.value = g.value;
-  _cell.value = c.value;
+  _name.value = props.name;
+  _gender.value = props.gender;
+  _cell.value = props.cell;
 });
 </script>
 
