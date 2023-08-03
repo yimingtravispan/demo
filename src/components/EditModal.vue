@@ -1,11 +1,5 @@
 <script setup>
-import {
-  defineProps,
-  defineEmits,
-  ref,
-  computed,
-  watchEffect,
-} from "vue";
+import { defineProps, defineEmits, ref, computed, watchEffect } from "vue";
 
 const props = defineProps({
   add: Boolean,
