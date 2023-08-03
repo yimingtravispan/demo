@@ -25,10 +25,19 @@ const submit = (user) => {
   display.value = false;
   emit("finalize", user);
 };
+
+const open = () => {
+  if (props.add) {
+    _name.value = "";
+    _gender.value = "";
+    _cell.value = "";
+  }
+  display.value = true;
+};
 </script>
 
 <template>
-  <button :class="{ add: add }" @click="display = true">
+  <button :class="{ add: add }" @click="open">
     <p v-if="add">新建</p>
     <p v-if="!add">编辑</p>
   </button>
