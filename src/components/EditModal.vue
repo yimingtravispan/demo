@@ -1,5 +1,6 @@
 <script setup>
 import { defineProps, defineEmits, ref, watchEffect } from "vue";
+import { EditPen, Plus } from "@element-plus/icons-vue";
 
 const props = defineProps({
   add: Boolean,
@@ -16,6 +17,8 @@ const _name = props.add ? ref("") : ref(props.user.name);
 const _gender = props.add ? ref("") : ref(props.user.gender);
 // function for cell input
 const _cell = props.add ? ref("") : ref(props.user.cell);
+
+const Gender = ref("1");
 
 const close = () => {
   display.value = false;
@@ -37,10 +40,17 @@ const open = () => {
 </script>
 
 <template>
-  <button :class="{ add: add }" @click="open">
-    <p v-if="add">新建</p>
-    <p v-if="!add">编辑</p>
-  </button>
+  <el-button
+    v-if="add"
+    :class="{ add: add }"
+    type="primary"
+    :icon="Plus"
+    @click="open"
+    >添加</el-button
+  >
+  <el-button v-if="!add" type="primary" :icon="EditPen" @click="open"
+    >编辑</el-button
+  >
   <Teleport to="body">
     <div v-if="display" class="modal-mask">
       <div class="modal-container">
@@ -54,6 +64,7 @@ const open = () => {
           <p class="error" v-if="!_name">姓名不可为空</p>
         </div>
 
+        <!--
         <div class="modal-body">
           <div>
             <input
@@ -74,6 +85,12 @@ const open = () => {
           </div>
           <p class="error" v-if="!_gender">姓别不可为空</p>
         </div>
+        -->
+
+        <el-radio-group v-model="_gender">
+          <el-radio label="男">男</el-radio>
+          <el-radio label="女">女</el-radio>
+        </el-radio-group>
 
         <div class="modal-body">
           <input v-model="_cell" />
@@ -152,15 +169,15 @@ const open = () => {
 }
 
 button.add {
-  border-radius: 10px;
-  padding: 5px 10px;
   margin-top: 5px;
   margin-bottom: 5px;
-  background-color: #84ffa3;
+  color: black;
+  border: none;
+  background-color: #74fe96;
 }
 
 button.add:hover {
-  background-color: #009b27;
+  background-color: #a6febc;
   color: white;
 }
 </style>

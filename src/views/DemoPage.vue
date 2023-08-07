@@ -1,7 +1,8 @@
 <script setup>
 import { ref, computed } from "vue";
-import Edit from "../components/EditModal.vue";
+import EditModal from "../components/EditModal.vue";
 import users from "../assets/data.JSON";
+import { RefreshLeft, Delete } from "@element-plus/icons-vue";
 
 // Getting data
 const names = ref(users.users);
@@ -50,17 +51,25 @@ const createUser = (user) => {
 
 <template>
   <div>
-    用户名<input v-model="search" placeholder="用户名搜索" /> 性别<select
-      v-model="searchGender"
+    用户名
+    <el-input v-model="search" placeholder="用户名搜索" clearable />
+    性别
+
+    <el-select v-model="searchGender" placeholder="性别搜索" clearable>
+      <el-option
+        v-for="item in users.genders"
+        :key="item.value"
+        :label="item.label"
+        :value="item.value"
+      />
+    </el-select>
+
+    <el-button class="reset" @click="resetSearch" :icon="RefreshLeft"
+      >重置</el-button
     >
-      <option value="" selected>全部性别</option>
-      <option value="男">男</option>
-      <option value="女">女</option>
-    </select>
-    <button class="reset" @click="resetSearch">重置</button>
   </div>
 
-  <edit :add="true" @finalize="createUser"></edit>
+  <EditModal :add="true" @finalize="createUser"></EditModal>
 
   <table>
     <thead>
@@ -75,7 +84,7 @@ const createUser = (user) => {
           {{ user[col.en] }}
         </td>
         <td>
-          <edit
+          <EditModal
             :add="false"
             :user="user"
             @finalize="
@@ -85,17 +94,60 @@ const createUser = (user) => {
                 (user.cell = updatedUser.cell)
               )
             "
-          ></edit>
-          <button class="del" @click="deleteRow(user.id)">删除</button>
+          ></EditModal>
+          <el-button class="del" @click="deleteRow(user.id)" :icon="Delete">
+            删除
+          </el-button>
         </td>
       </tr>
     </tbody>
   </table>
   <p v-if="filteredNames.length">总计: {{ filteredNames.length }}</p>
   <p v-if="!filteredNames.length">未找到匹配</p>
+
+  <el-table
+    class="el-table"
+    :data="filteredNames"
+    style="width: 100% !important"
+  >
+    <el-table-column label="编号" prop="id" />
+    <el-table-column label="用户名" prop="name" />
+    <el-table-column label="性别" prop="gender" />
+    <el-table-column label="手机号码" prop="cell" />
+    <el-table-column label="添加日期" prop="date" />
+    <el-table-column label="操作">
+      <template #default="scope">
+        <EditModal
+          :add="false"
+          :user="scope.row"
+          @finalize="
+            (updatedUser) => (
+              (scope.row.name = updatedUser.name),
+              (scope.row.gender = updatedUser.gender),
+              (scope.row.cell = updatedUser.cell)
+            )
+          "
+        ></EditModal>
+        <el-button type="danger" @click="deleteRow(scope.row.id)" :icon="Delete"
+          >删除</el-button
+        >
+      </template>
+    </el-table-column>
+  </el-table>
+
+  <p v-if="filteredNames.length">总计: {{ filteredNames.length }}</p>
+  <p v-if="!filteredNames.length">未找到匹配</p>
 </template>
 
 <style>
+.el-input {
+  width: fit-content;
+}
+
+.el-select {
+  width: fit-content;
+}
+
 table {
   margin: auto;
   border-collapse: collapse;
